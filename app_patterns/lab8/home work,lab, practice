@@ -1,0 +1,816 @@
+//Паттерн "Команда"
+
+#include <iostream>
+#include <stack>
+#include <string>
+
+class ICommand {
+public:
+    virtual void execute() = 0;
+    virtual void undo() = 0;
+    virtual ~ICommand() = default;
+};
+
+
+class Light {
+public:
+    void on() { std::cout << "Light is ON\n"; }
+    void off() { std::cout << "Light is OFF\n"; }
+};
+
+class Door {
+public:
+    void open() { std::cout << "Door is OPEN\n"; }
+    void close() { std::cout << "Door is CLOSED\n"; }
+};
+
+class Thermostat {
+public:
+    void increaseTemp() { std::cout << "Temperature is INCREASED\n"; }
+    void decreaseTemp() { std::cout << "Temperature is DECREASED\n"; }
+};
+
+class LightOnCommand : public ICommand {
+    Light& light;
+public:
+    LightOnCommand(Light& l) : light(l) {}
+    void execute() override { light.on(); }
+    void undo() override { light.off(); }
+};
+
+class LightOffCommand : public ICommand {
+    Light& light;
+public:
+    LightOffCommand(Light& l) : light(l) {}
+    void execute() override { light.off(); }
+    void undo() override { light.on(); }
+};
+
+class DoorOpenCommand : public ICommand {
+    Door& door;
+public:
+    DoorOpenCommand(Door& d) : door(d) {}
+    void execute() override { door.open(); }
+    void undo() override { door.close(); }
+};
+
+class DoorCloseCommand : public ICommand {
+    Door& door;
+public:
+    DoorCloseCommand(Door& d) : door(d) {}
+    void execute() override { door.close(); }
+    void undo() override { door.open(); }
+};
+
+class ThermostatIncreaseCommand : public ICommand {
+    Thermostat& thermostat;
+public:
+    ThermostatIncreaseCommand(Thermostat& t) : thermostat(t) {}
+    void execute() override { thermostat.increaseTemp(); }
+    void undo() override { thermostat.decreaseTemp(); }
+};
+
+class RemoteControl {
+    std::stack<ICommand*> history;
+public:
+    void executeCommand(ICommand* command) {
+        command->execute();
+        history.push(command);
+    }
+
+    void undoLastCommand() {
+        if (!history.empty()) {
+            history.top()->undo();
+            history.pop();
+        } else {
+            std::cout << "No commands to undo\n";
+        }
+    }
+};
+
+
+
+
+//Паттерн "Шаблонный метод"
+
+#include <iostream>
+
+
+class Beverage {
+public:
+    virtual ~Beverage() = default;
+    void prepareRecipe() {
+        boilWater();
+        brew();
+        pourInCup();
+        if (customerWantsCondiments()) {
+            addCondiments();
+        }
+    }
+
+protected:
+    void boilWater() { std::cout << "Кипячение воды\n"; }
+    void pourInCup() { std::cout << "Наливание в чашку\n"; }
+
+    virtual void brew() = 0;
+    virtual void addCondiments() = 0;
+
+    virtual bool customerWantsCondiments() { return true; }
+};
+
+class Tea : public Beverage {
+protected:
+    void brew() override { std::cout << "Заваривание чая\n"; }
+    void addCondiments() override { std::cout << "Добавление лимона\n"; }
+};
+
+class Coffee : public Beverage {
+protected:
+    void brew() override { std::cout << "Заваривание кофе\n"; }
+    void addCondiments() override { std::cout << "Добавление сахара и молока\n"; }
+
+    bool customerWantsCondiments() override {
+        char answer;
+        std::cout << "Хотите добавить сахар и молоко (y/n)? ";
+        std::cin >> answer;
+        return answer == 'y' || answer == 'Y';
+    }
+};
+
+
+//Паттерн "Посредник" (Mediator)
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+#include <algorithm>
+
+// Интерфейс Посредника
+class IMediator {
+public:
+    virtual void sendMessage(const std::string& message, class User* user) = 0;
+    virtual void addUser(User* user) = 0;
+};
+
+// Абстрактный класс Пользователь
+class User {
+protected:
+    IMediator* mediator;
+    std::string name;
+
+public:
+    User(IMediator* mediator, const std::string& name) : mediator(mediator), name(name) {}
+
+    virtual void send(const std::string& message) = 0;
+    virtual void receive(const std::string& message) = 0;
+
+    std::string getName() const { return name; }
+};
+
+// Конкретный класс ChatRoom — посредник
+class ChatRoom : public IMediator {
+    std::vector<User*> users;
+
+public:
+    void addUser(User* user) override {
+        users.push_back(user);
+        std::cout << user->getName() << " присоединился к чату\n";
+    }
+
+    void sendMessage(const std::string& message, User* sender) override {
+        for (auto user : users) {
+            if (user != sender) {
+                user->receive(message);
+            }
+        }
+    }
+};
+
+// Конкретный класс Обычный пользователь
+class ConcreteUser : public User {
+public:
+    ConcreteUser(IMediator* mediator, const std::string& name) : User(mediator, name) {}
+
+    void send(const std::string& message) override {
+        std::cout << name << " отправил сообщение: " << message << "\n";
+        mediator->sendMessage(message, this);
+    }
+
+    void receive(const std::string& message) override {
+        std::cout << name << " получил сообщение: " << message << "\n";
+    }
+};
+
+// лабараторная 
+
+//команда 
+
+public interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+public class LightOnCommand : ICommand
+{
+    private Light _light;
+
+    public LightOnCommand(Light light)
+    {
+        _light = light;
+    }
+
+    public void Execute()
+    {
+        _light.On();
+    }
+
+    public void Undo()
+    {
+        _light.Off();
+    }
+}
+
+public class LightOffCommand : ICommand
+{
+    private Light _light;
+
+    public LightOffCommand(Light light)
+    {
+        _light = light;
+    }
+
+    public void Execute()
+    {
+        _light.Off();
+    }
+
+    public void Undo()
+    {
+        _light.On();
+    }
+}
+
+public class Light
+{
+    public void On()
+    {
+        Console.WriteLine("Свет включен.");
+    }
+
+    public void Off()
+    {
+        Console.WriteLine("Свет выключен.");
+    }
+}
+
+public class Television
+{
+    public void On()
+    {
+        Console.WriteLine("Телевизор включен.");
+    }
+
+    public void Off()
+    {
+        Console.WriteLine("Телевизор выключен.");
+    }
+}
+
+public class RemoteControl
+{
+    private ICommand _onCommand;
+    private ICommand _offCommand;
+
+    public void SetCommands(ICommand onCommand, ICommand offCommand)
+    {
+        _onCommand = onCommand;
+        _offCommand = offCommand;
+    }
+
+    public void PressOnButton()
+    {
+        _onCommand.Execute();
+    }
+
+    public void PressOffButton()
+    {
+        _offCommand.Execute();
+    }
+
+    public void PressUndoButton()
+    {
+        _onCommand.Undo();
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Light livingRoomLight = new Light();
+        Television tv = new Television();
+
+        ICommand lightOn = new LightOnCommand(livingRoomLight);
+        ICommand lightOff = new LightOffCommand(livingRoomLight);
+
+        ICommand tvOn = new TelevisionOnCommand(tv);
+        ICommand tvOff = new TelevisionOffCommand(tv);
+
+        RemoteControl remote = new RemoteControl();
+
+        remote.SetCommands(lightOn, lightOff);
+        Console.WriteLine("Управление светом:");
+        remote.PressOnButton();
+        remote.PressOffButton();
+        remote.PressUndoButton();
+
+        remote.SetCommands(tvOn, tvOff);
+        Console.WriteLine("\nУправление телевизором:");
+        remote.PressOnButton();
+        remote.PressOffButton();
+    }
+}
+
+
+//Шаблонный метод 
+
+
+public abstract class Beverage
+{
+    public void PrepareRecipe()
+    {
+        BoilWater();
+        Brew();
+        PourInCup();
+        AddCondiments();
+    }
+
+    private void BoilWater()
+    {
+        Console.WriteLine("Кипячение воды...");
+    }
+
+    private void PourInCup()
+    {
+        Console.WriteLine("Наливание в чашку...");
+    }
+
+    protected abstract void Brew();
+    protected abstract void AddCondiments();
+}
+
+public class Tea : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Заваривание чая...");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Добавление лимона...");
+    }
+}
+
+public class Coffee : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Заваривание кофе...");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Добавление сахара и молока...");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Beverage tea = new Tea();
+        Console.WriteLine("Приготовление чая:");
+        tea.PrepareRecipe();
+
+        Console.WriteLine();
+
+        Beverage coffee = new Coffee();
+        Console.WriteLine("Приготовление кофе:");
+        coffee.PrepareRecipe();
+    }
+}
+
+//Посредник
+
+
+public interface IMediator
+{
+    void SendMessage(string message, Colleague colleague);
+}
+
+public abstract class Colleague
+{
+    protected IMediator _mediator;
+
+    public Colleague(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    public abstract void ReceiveMessage(string message);
+}
+
+public class ChatMediator : IMediator
+{
+    private List<Colleague> _colleagues;
+
+    public ChatMediator()
+    {
+        _colleagues = new List<Colleague>();
+    }
+
+    public void RegisterColleague(Colleague colleague)
+    {
+        _colleagues.Add(colleague);
+    }
+
+    public void SendMessage(string message, Colleague sender)
+    {
+        foreach (var colleague in _colleagues)
+        {
+            if (colleague != sender)
+            {
+                colleague.ReceiveMessage(message);
+            }
+        }
+    }
+}
+
+public class User : Colleague
+{
+    private string _name;
+
+    public User(IMediator mediator, string name) : base(mediator)
+    {
+        _name = name;
+    }
+
+    public void Send(string message)
+    {
+        Console.WriteLine($"{_name} отправляет сообщение: {message}");
+        _mediator.SendMessage(message, this);
+    }
+
+    public override void ReceiveMessage(string message)
+    {
+        Console.WriteLine($"{_name} получил сообщение: {message}");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        ChatMediator chatMediator = new ChatMediator();
+
+        User user1 = new User(chatMediator, "Алиса");
+        User user2 = new User(chatMediator, "Боб");
+        User user3 = new User(chatMediator, "Чарли");
+
+        chatMediator.RegisterColleague(user1);
+        chatMediator.RegisterColleague(user2);
+        chatMediator.RegisterColleague(user3);
+
+        user1.Send("Привет всем!");
+        user2.Send("Привет, Алиса!");
+        user3.Send("Всем привет!");
+    }
+}
+
+
+// практическая 
+
+// Команда (Command) — Система "Умный дом"
+using System;
+using System.Collections.Generic;
+
+public interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+// Устройства
+public class Light
+{
+    public void On() => Console.WriteLine("Light is ON");
+    public void Off() => Console.WriteLine("Light is OFF");
+}
+
+public class TV
+{
+    public void On() => Console.WriteLine("TV is ON");
+    public void Off() => Console.WriteLine("TV is OFF");
+}
+
+public class AirConditioner
+{
+    public void On() => Console.WriteLine("Air Conditioner is ON");
+    public void Off() => Console.WriteLine("Air Conditioner is OFF");
+}
+
+// Команды для управления устройствами
+public class LightOnCommand : ICommand
+{
+    private readonly Light _light;
+    public LightOnCommand(Light light) => _light = light;
+
+    public void Execute() => _light.On();
+    public void Undo() => _light.Off();
+}
+
+public class LightOffCommand : ICommand
+{
+    private readonly Light _light;
+    public LightOffCommand(Light light) => _light = light;
+
+    public void Execute() => _light.Off();
+    public void Undo() => _light.On();
+}
+
+public class TVOnCommand : ICommand
+{
+    private readonly TV _tv;
+    public TVOnCommand(TV tv) => _tv = tv;
+
+    public void Execute() => _tv.On();
+    public void Undo() => _tv.Off();
+}
+
+public class TVOffCommand : ICommand
+{
+    private readonly TV _tv;
+    public TVOffCommand(TV tv) => _tv = tv;
+
+    public void Execute() => _tv.Off();
+    public void Undo() => _tv.On();
+}
+
+public class ACOnCommand : ICommand
+{
+    private readonly AirConditioner _ac;
+    public ACOnCommand(AirConditioner ac) => _ac = ac;
+
+    public void Execute() => _ac.On();
+    public void Undo() => _ac.Off();
+}
+
+public class ACOffCommand : ICommand
+{
+    private readonly AirConditioner _ac;
+    public ACOffCommand(AirConditioner ac) => _ac = ac;
+
+    public void Execute() => _ac.Off();
+    public void Undo() => _ac.On();
+}
+
+// Пульт управления
+public class RemoteControl
+{
+    private readonly ICommand[] _onCommands;
+    private readonly ICommand[] _offCommands;
+    private ICommand _lastCommand;
+
+    public RemoteControl()
+    {
+        _onCommands = new ICommand[5];
+        _offCommands = new ICommand[5];
+        _lastCommand = null;
+    }
+
+    public void SetCommand(int slot, ICommand onCommand, ICommand offCommand)
+    {
+        _onCommands[slot] = onCommand;
+        _offCommands[slot] = offCommand;
+    }
+
+    public void OnButtonPressed(int slot)
+    {
+        _onCommands[slot].Execute();
+        _lastCommand = _onCommands[slot];
+    }
+
+    public void OffButtonPressed(int slot)
+    {
+        _offCommands[slot].Execute();
+        _lastCommand = _offCommands[slot];
+    }
+
+    public void UndoButtonPressed()
+    {
+        _lastCommand?.Undo();
+    }
+}
+
+// Макрокоманда
+public class MacroCommand : ICommand
+{
+    private readonly ICommand[] _commands;
+    public MacroCommand(ICommand[] commands) => _commands = commands;
+
+    public void Execute()
+    {
+        foreach (var command in _commands)
+        {
+            command.Execute();
+        }
+    }
+
+    public void Undo()
+    {
+        foreach (var command in _commands)
+        {
+            command.Undo();
+        }
+    }
+}
+
+// Клиентский код для пульта
+class SmartHome
+{
+    static void Main()
+    {
+        var remote = new RemoteControl();
+        
+        var livingRoomLight = new Light();
+        var tv = new TV();
+        var ac = new AirConditioner();
+
+        var lightOn = new LightOnCommand(livingRoomLight);
+        var lightOff = new LightOffCommand(livingRoomLight);
+        var tvOn = new TVOnCommand(tv);
+        var tvOff = new TVOffCommand(tv);
+        var acOn = new ACOnCommand(ac);
+        var acOff = new ACOffCommand(ac);
+        
+        remote.SetCommand(0, lightOn, lightOff);
+        remote.SetCommand(1, tvOn, tvOff);
+        remote.SetCommand(2, acOn, acOff);
+
+        // Выполнение отдельных команд
+        remote.OnButtonPressed(0);  // Light ON
+        remote.OffButtonPressed(0); // Light OFF
+        
+        // Макрокоманда
+        var partyOn = new MacroCommand(new ICommand[] { lightOn, tvOn, acOn });
+        var partyOff = new MacroCommand(new ICommand[] { lightOff, tvOff, acOff });
+
+        remote.SetCommand(3, partyOn, partyOff);
+
+        remote.OnButtonPressed(3);  // Макрокоманда для включения всех устройств
+        remote.OffButtonPressed(3); // Макрокоманда для выключения всех устройств
+
+        // Отмена последней команды
+        remote.UndoButtonPressed();  // Последняя команда отменена
+    }
+}
+
+
+// Шаблонный метод (Template Method) — Система отчетов
+public abstract class ReportGenerator
+{
+    public void GenerateReport()
+    {
+        PrepareData();
+        FormatData();
+        SaveReport();
+        if (CustomerWantsEmail())
+        {
+            SendEmail();
+        }
+    }
+
+    protected abstract void PrepareData();
+    protected abstract void FormatData();
+    protected abstract void SaveReport();
+
+    protected virtual bool CustomerWantsEmail() => false;
+    protected virtual void SendEmail() => Console.WriteLine("Sending report via email...");
+}
+
+public class PdfReport : ReportGenerator
+{
+    protected override void PrepareData() => Console.WriteLine("Preparing data for PDF report...");
+    protected override void FormatData() => Console.WriteLine("Formatting data for PDF report...");
+    protected override void SaveReport() => Console.WriteLine("Saving PDF report...");
+}
+
+public class ExcelReport : ReportGenerator
+{
+    protected override void PrepareData() => Console.WriteLine("Preparing data for Excel report...");
+    protected override void FormatData() => Console.WriteLine("Formatting data for Excel report...");
+    protected override void SaveReport() => Console.WriteLine("Saving Excel report...");
+}
+
+public class HtmlReport : ReportGenerator
+{
+    protected override void PrepareData() => Console.WriteLine("Preparing data for HTML report...");
+    protected override void FormatData() => Console.WriteLine("Formatting data for HTML report...");
+    protected override void SaveReport() => Console.WriteLine("Saving HTML report...");
+}
+
+class ReportSystem
+{
+    static void Main()
+    {
+        ReportGenerator pdfReport = new PdfReport();
+        pdfReport.GenerateReport();
+
+        ReportGenerator excelReport = new ExcelReport();
+        excelReport.GenerateReport();
+
+        ReportGenerator htmlReport = new HtmlReport();
+        htmlReport.GenerateReport();
+    }
+}
+
+
+// Посредник (Mediator) — Чат система
+public interface IMediator
+{
+    void SendMessage(string message, User user);
+    void AddUser(User user);
+}
+
+public class ChatMediator : IMediator
+{
+    private List<User> _users = new List<User>();
+
+    public void AddUser(User user) => _users.Add(user);
+
+    public void SendMessage(string message, User user)
+    {
+        foreach (var u in _users)
+        {
+            if (u != user)
+            {
+                u.Receive(message);
+            }
+        }
+    }
+}
+
+public abstract class User
+{
+    protected IMediator mediator;
+    protected string name;
+
+    public User(IMediator mediator, string name)
+    {
+        this.mediator = mediator;
+        this.name = name;
+    }
+
+    public abstract void Send(string message);
+    public abstract void Receive(string message);
+}
+
+public class ChatUser : User
+{
+    public ChatUser(IMediator mediator, string name) : base(mediator, name) { }
+
+    public override void Send(string message)
+    {
+        Console.WriteLine($"{name} sends: {message}");
+        mediator.SendMessage(message, this);
+    }
+
+    public override void Receive(string message)
+    {
+        Console.WriteLine($"{name} receives: {message}");
+    }
+}
+
+class ChatSystem
+{
+    static void Main()
+    {
+        IMediator mediator = new ChatMediator();
+
+        User user1 = new ChatUser(mediator, "User1");
+        User user2 = new ChatUser(mediator, "User2");
+        User user3 = new ChatUser(mediator, "User3");
+
+        mediator.AddUser(user1);
+        mediator.AddUser(user2);
+        mediator.AddUser(user3);
+
+        user1.Send("Hello everyone!");
+        user2.Send("Hi User1!");
+    }
+}
+
+

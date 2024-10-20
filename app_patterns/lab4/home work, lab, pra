@@ -1,0 +1,512 @@
+// Класс для хранения данных о заказе
+public class Order
+{
+    public string ProductName { get; set; }
+    public int Quantity { get; set; }
+    public double Price { get; set; }
+
+    public Order(string productName, int quantity, double price)
+    {
+        ProductName = productName;
+        Quantity = quantity;
+        Price = price;
+    }
+}
+
+// Класс для расчета стоимости
+public class PriceCalculator
+{
+    public double CalculateTotalPrice(Order order)
+    {
+        return order.Quantity * order.Price * 0.9; // 10% скидка
+    }
+}
+
+// Класс для обработки платежей
+public class PaymentProcessor
+{
+    public void ProcessPayment(string paymentDetails)
+    {
+        Console.WriteLine("Платеж обработан с помощью: " + paymentDetails);
+    }
+}
+
+// Класс для отправки уведомлений
+public class NotificationService
+{
+    public void SendConfirmationEmail(string email)
+    {
+        Console.WriteLine("Письмо с подтверждением отправлено на: " + email);
+    }
+}
+
+open closed 
+
+public abstract class Employee
+{
+    public string Name { get; set; }
+    public double BaseSalary { get; set; }
+
+    protected Employee(string name, double baseSalary)
+    {
+        Name = name;
+        BaseSalary = baseSalary;
+    }
+
+    public abstract double CalculateSalary();
+}
+
+public class PermanentEmployee : Employee
+{
+    public PermanentEmployee(string name, double baseSalary) : base(name, baseSalary) { }
+
+    public override double CalculateSalary()
+    {
+        return BaseSalary * 1.2; // 20% бонус
+    }
+}
+
+public class ContractEmployee : Employee
+{
+    public ContractEmployee(string name, double baseSalary) : base(name, baseSalary) { }
+
+    public override double CalculateSalary()
+    {
+        return BaseSalary * 1.1; // 10% бонус
+    }
+}
+
+public class InternEmployee : Employee
+{
+    public InternEmployee(string name, double baseSalary) : base(name, baseSalary) { }
+
+    public override double CalculateSalary()
+    {
+        return BaseSalary * 0.8; 
+    }
+}
+ISP
+
+public interface IPrinter
+{
+    void Print(string content);
+}
+
+public interface IScanner
+{
+    void Scan(string content);
+}
+
+public interface IFax
+{
+    void Fax(string content);
+}
+
+// Класс, который поддерживает только печать
+public class BasicPrinter : IPrinter
+{
+    public void Print(string content)
+    {
+        Console.WriteLine("Печать: " + content);
+    }
+}
+
+public class AllInOnePrinter : IPrinter, IScanner, IFax
+{
+    public void Print(string content)
+    {
+        Console.WriteLine("Печать: " + content);
+    }
+
+    public void Scan(string content)
+    {
+        Console.WriteLine("Сканирование: " + content);
+    }
+
+    public void Fax(string content)
+    {
+        Console.WriteLine("Отправка факса: " + content);
+    }
+}
+
+dip
+
+public interface INotificationSender
+{
+    void Send(string message);
+}
+
+public class EmailSender : INotificationSender
+{
+    public void Send(string message)
+    {
+        Console.WriteLine("Email отправлен: " + message);
+    }
+}
+
+public class SmsSender : INotificationSender
+{
+    public void Send(string message)
+    {
+        Console.WriteLine("SMS отправлено: " + message);
+    }
+}
+
+public class NotificationService
+{
+    private INotificationSender _notificationSender;
+
+    public NotificationService(INotificationSender notificationSender)
+    {
+        _notificationSender = notificationSender;
+    }
+
+    public void SendNotification(string message)
+    {
+        _notificationSender.Send(message);
+    }
+}
+
+// Пример использования
+public class Program
+{
+    public static void Main()
+    {
+        INotificationSender emailSender = new EmailSender();
+        NotificationService emailNotificationService = new NotificationService(emailSender);
+        emailNotificationService.SendNotification("Ваш заказ принят.");
+
+        INotificationSender smsSender = new SmsSender();
+        NotificationService smsNotificationService = new NotificationService(smsSender);
+        smsNotificationService.SendNotification("Ваш заказ отправлен.");
+    }
+}
+
+
+
+// практическая 
+
+using System;
+using System.Collections.Generic;
+
+public class Order
+{
+    public List<string> Items { get; private set; } = new List<string>();
+    public double TotalPrice { get; private set; }
+    private IPayment _paymentMethod;
+    private IDelivery _deliveryMethod;
+    private INotification _notification;
+
+    public void AddItem(string item, double price)
+    {
+        Items.Add(item);
+        TotalPrice += price;
+    }
+
+    public void SetPaymentMethod(IPayment payment)
+    {
+        _paymentMethod = payment;
+    }
+
+    public void SetDeliveryMethod(IDelivery delivery)
+    {
+        _deliveryMethod = delivery;
+    }
+
+    public void SetNotificationMethod(INotification notification)
+    {
+        _notification = notification;
+    }
+
+    public void ProcessOrder()
+    {
+        if (_paymentMethod != null)
+        {
+            _paymentMethod.ProcessPayment(TotalPrice);
+            _deliveryMethod.DeliverOrder(this);
+            _notification.SendNotification("Заказ успешно обработан.");
+        }
+    }
+}
+
+public interface IPayment
+{
+    void ProcessPayment(double amount);
+}
+
+public class CreditCardPayment : IPayment
+{
+    public void ProcessPayment(double amount)
+    {
+        Console.WriteLine($"Оплата картой: {amount}");
+    }
+}
+
+public class PayPalPayment : IPayment
+{
+    public void ProcessPayment(double amount)
+    {
+        Console.WriteLine($"Оплата через PayPal: {amount}");
+    }
+}
+
+public class BankTransferPayment : IPayment
+{
+    public void ProcessPayment(double amount)
+    {
+        Console.WriteLine($"Банковский перевод: {amount}");
+    }
+}
+
+public interface IDelivery
+{
+    void DeliverOrder(Order order);
+}
+
+public class CourierDelivery : IDelivery
+{
+    public void DeliverOrder(Order order)
+    {
+        Console.WriteLine("Доставка курьером.");
+    }
+}
+
+public class PostDelivery : IDelivery
+{
+    public void DeliverOrder(Order order)
+    {
+        Console.WriteLine("Доставка почтой.");
+    }
+}
+
+public class PickUpPointDelivery : IDelivery
+{
+    public void DeliverOrder(Order order)
+    {
+        Console.WriteLine("Самовывоз из пункта выдачи.");
+    }
+}
+
+public interface INotification
+{
+    void SendNotification(string message);
+}
+
+public class EmailNotification : INotification
+{
+    public void SendNotification(string message)
+    {
+        Console.WriteLine("Уведомление по email: " + message);
+    }
+}
+
+public class SmsNotification : INotification
+{
+    public void SendNotification(string message)
+    {
+        Console.WriteLine("Уведомление по SMS: " + message);
+    }
+}
+
+public class DiscountCalculator
+{
+    public double CalculateDiscount(double totalPrice)
+    {
+        return totalPrice * 0.1;
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        Order order = new Order();
+        order.AddItem("Товар 1", 100);
+        order.AddItem("Товар 2", 150);
+        order.SetPaymentMethod(new CreditCardPayment());
+        order.SetDeliveryMethod(new CourierDelivery());
+        order.SetNotificationMethod(new EmailNotification());
+        
+        double discount = new DiscountCalculator().CalculateDiscount(order.TotalPrice);
+        order.TotalPrice -= discount;
+
+        order.ProcessOrder();
+    }
+}
+
+// лабараторная 
+
+using System;
+using System.Collections.Generic;
+
+// Single Responsibility Principle (SRP)
+public class Invoice
+{
+    public int Id { get; set; }
+    public List<Item> Items { get; set; } = new List<Item>();
+    public double TaxRate { get; set; }
+}
+
+public class InvoiceCalculator
+{
+    public double CalculateTotal(Invoice invoice)
+    {
+        double subTotal = 0;
+        foreach (var item in invoice.Items)
+        {
+            subTotal += item.Price;
+        }
+        return subTotal + (subTotal * invoice.TaxRate);
+    }
+}
+
+public class InvoiceRepository
+{
+    public void SaveToDatabase(Invoice invoice)
+    {
+        
+    }
+}
+
+// Open-Closed Principle (OCP)
+public abstract class Discount
+{
+    public abstract double Calculate(double amount);
+}
+
+public class RegularCustomerDiscount : Discount
+{
+    public override double Calculate(double amount) => amount;
+}
+
+public class SilverCustomerDiscount : Discount
+{
+    public override double Calculate(double amount) => amount * 0.9;
+}
+
+public class GoldCustomerDiscount : Discount
+{
+    public override double Calculate(double amount) => amount * 0.8;
+}
+
+public class PlatinumCustomerDiscount : Discount
+{
+    public override double Calculate(double amount) => amount * 0.7; // 30% скидка
+}
+
+public class DiscountCalculator
+{
+    public double CalculateDiscount(Discount discount, double amount)
+    {
+        return discount.Calculate(amount);
+    }
+}
+
+// Interface Segregation Principle (ISP)
+public interface IWorker
+{
+    void Work();
+}
+
+public interface IEater
+{
+    void Eat();
+}
+
+public interface ISleeper
+{
+    void Sleep();
+}
+
+public class HumanWorker : IWorker, IEater, ISleeper
+{
+    public void Work()
+    {
+        // Логика работы
+    }
+
+    public void Eat()
+    {
+        // Логика питания
+    }
+
+    public void Sleep()
+    {
+        // Логика сна
+    }
+}
+
+public class RobotWorker : IWorker
+{
+    public void Work()
+    {
+        // Логика работы
+    }
+}
+
+// Dependency Inversion Principle (DIP)
+public interface IMessageService
+{
+    void Send(string message);
+}
+
+public class EmailService : IMessageService
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Отправка Email: {message}");
+    }
+}
+
+public class SmsService : IMessageService
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Отправка SMS: {message}");
+    }
+}
+
+public class Notification
+{
+    private readonly IMessageService _messageService;
+
+    public Notification(IMessageService messageService)
+    {
+        _messageService = messageService;
+    }
+
+    public void Send(string message)
+    {
+        _messageService.Send(message);
+    }
+}
+
+public class Item
+{
+    public string Name { get; set; }
+    public double Price { get; set; }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        Invoice invoice = new Invoice();
+        invoice.Items.Add(new Item { Name = "Товар 1", Price = 100 });
+        invoice.Items.Add(new Item { Name = "Товар 2", Price = 150 });
+        invoice.TaxRate = 0.1;
+
+        InvoiceCalculator calculator = new InvoiceCalculator();
+        double total = calculator.CalculateTotal(invoice);
+
+        InvoiceRepository repository = new InvoiceRepository();
+        repository.SaveToDatabase(invoice);
+
+        DiscountCalculator discountCalculator = new DiscountCalculator();
+        double discountAmount = discountCalculator.CalculateDiscount(new GoldCustomerDiscount(), total);
+        
+        IMessageService emailService = new EmailService();
+        Notification notification = new Notification(emailService);
+        notification.Send("Ваш счет на сумму " + discountAmount);
+    }
+}

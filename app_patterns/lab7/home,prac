@@ -1,0 +1,178 @@
+//home work 
+
+using System;
+using System.Collections.Generic;
+
+public interface IObserver
+{
+    void Update(decimal exchangeRate);
+}
+
+public interface ISubject
+{
+    void Attach(IObserver observer);
+    void Detach(IObserver observer);
+    void Notify();
+}
+
+public class CurrencyExchange : ISubject
+{
+    private List<IObserver> _observers = new List<IObserver>();
+    private decimal _exchangeRate;
+
+    public decimal ExchangeRate
+    {
+        get => _exchangeRate;
+        set
+        {
+            _exchangeRate = value;
+            Notify();
+        }
+    }
+
+    public void Attach(IObserver observer)
+    {
+        _observers.Add(observer);
+    }
+
+    public void Detach(IObserver observer)
+    {
+        _observers.Remove(observer);
+    }
+
+    public void Notify()
+    {
+        foreach (var observer in _observers)
+        {
+            observer.Update(_exchangeRate);
+        }
+    }
+}
+
+public class Investor : IObserver
+{
+    public void Update(decimal exchangeRate)
+    {
+        Console.WriteLine($"Investor notified. New exchange rate: {exchangeRate}");
+    }
+}
+
+public class Trader : IObserver
+{
+    public void Update(decimal exchangeRate)
+    {
+        Console.WriteLine($"Trader notified. New exchange rate: {exchangeRate}");
+    }
+}
+
+public class Bank : IObserver
+{
+    public void Update(decimal exchangeRate)
+    {
+        Console.WriteLine($"Bank notified. New exchange rate: {exchangeRate}");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        CurrencyExchange currencyExchange = new CurrencyExchange();
+        Investor investor = new Investor();
+        Trader trader = new Trader();
+        Bank bank = new Bank();
+
+        currencyExchange.Attach(investor);
+        currencyExchange.Attach(trader);
+        currencyExchange.Attach(bank);
+
+        currencyExchange.ExchangeRate = 75.50m;
+        currencyExchange.ExchangeRate = 76.00m;
+
+        currencyExchange.Detach(trader);
+
+        currencyExchange.ExchangeRate = 76.50m;
+    }
+}
+
+
+//practice 
+
+using System;
+using System.Collections.Generic;
+
+public interface IObserver
+{
+    void Update(string stockSymbol, decimal newPrice);
+}
+
+public interface ISubject
+{
+    void Attach(IObserver observer);
+    void Detach(IObserver observer);
+    void Notify(string stockSymbol, decimal newPrice);
+}
+
+public class StockExchange : ISubject
+{
+    private Dictionary<string, decimal> _stocks = new Dictionary<string, decimal>();
+    private List<IObserver> _observers = new List<IObserver>();
+
+    public void Attach(IObserver observer)
+    {
+        _observers.Add(observer);
+    }
+
+    public void Detach(IObserver observer)
+    {
+        _observers.Remove(observer);
+    }
+
+    public void Notify(string stockSymbol, decimal newPrice)
+    {
+        foreach (var observer in _observers)
+        {
+            observer.Update(stockSymbol, newPrice);
+        }
+    }
+
+    public void UpdateStockPrice(string stockSymbol, decimal newPrice)
+    {
+        _stocks[stockSymbol] = newPrice;
+        Notify(stockSymbol, newPrice);
+    }
+}
+
+public class Trader : IObserver
+{
+    public void Update(string stockSymbol, decimal newPrice)
+    {
+        Console.WriteLine($"Trader notified: {stockSymbol} new price is {newPrice}");
+    }
+}
+
+public class TradingRobot : IObserver
+{
+    public void Update(string stockSymbol, decimal newPrice)
+    {
+        if (newPrice < 100) Console.WriteLine($"Robot buying {stockSymbol} at {newPrice}");
+        else if (newPrice > 200) Console.WriteLine($"Robot selling {stockSymbol} at {newPrice}");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        StockExchange stockExchange = new StockExchange();
+        Trader trader = new Trader();
+        TradingRobot robot = new TradingRobot();
+
+        stockExchange.Attach(trader);
+        stockExchange.Attach(robot);
+
+        stockExchange.UpdateStockPrice("AAPL", 150);
+        stockExchange.UpdateStockPrice("AAPL", 250);
+        stockExchange.UpdateStockPrice("AAPL", 90);
+    }
+}

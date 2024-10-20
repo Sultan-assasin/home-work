@@ -1,0 +1,565 @@
+// home work 
+
+using System;
+using System.Collections.Generic;
+
+public interface IVehicle
+{
+    void Drive();
+    void Refuel();
+}
+
+public class Car : IVehicle
+{
+    public string Make { get; }
+    public string Model { get; }
+    public string FuelType { get; }
+
+    public Car(string make, string model, string fuelType)
+    {
+        Make = make;
+        Model = model;
+        FuelType = fuelType;
+    }
+
+    public void Drive()
+    {
+        Console.WriteLine($"Driving a {Make} {Model}.");
+    }
+
+    public void Refuel()
+    {
+        Console.WriteLine($"Refueling a {Make} {Model} with {FuelType}.");
+    }
+}
+
+public class Motorcycle : IVehicle
+{
+    public string Type { get; }
+    public double EngineCapacity { get; }
+
+    public Motorcycle(string type, double engineCapacity)
+    {
+        Type = type;
+        EngineCapacity = engineCapacity;
+    }
+
+    public void Drive()
+    {
+        Console.WriteLine($"Riding a {Type} motorcycle with {EngineCapacity}L engine.");
+    }
+
+    public void Refuel()
+    {
+        Console.WriteLine($"Refueling a {Type} motorcycle.");
+    }
+}
+
+public class Truck : IVehicle
+{
+    public double LoadCapacity { get; }
+    public int Axles { get; }
+
+    public Truck(double loadCapacity, int axles)
+    {
+        LoadCapacity = loadCapacity;
+        Axles = axles;
+    }
+
+    public void Drive()
+    {
+        Console.WriteLine($"Driving a truck with {LoadCapacity} tons capacity and {Axles} axles.");
+    }
+
+    public void Refuel()
+    {
+        Console.WriteLine("Refueling the truck.");
+    }
+}
+
+public abstract class VehicleFactory
+{
+    public abstract IVehicle CreateVehicle();
+}
+
+public class CarFactory : VehicleFactory
+{
+    private readonly string _make;
+    private readonly string _model;
+    private readonly string _fuelType;
+
+    public CarFactory(string make, string model, string fuelType)
+    {
+        _make = make;
+        _model = model;
+        _fuelType = fuelType;
+    }
+
+    public override IVehicle CreateVehicle()
+    {
+        return new Car(_make, _model, _fuelType);
+    }
+}
+
+public class MotorcycleFactory : VehicleFactory
+{
+    private readonly string _type;
+    private readonly double _engineCapacity;
+
+    public MotorcycleFactory(string type, double engineCapacity)
+    {
+        _type = type;
+        _engineCapacity = engineCapacity;
+    }
+
+    public override IVehicle CreateVehicle()
+    {
+        return new Motorcycle(_type, _engineCapacity);
+    }
+}
+
+public class TruckFactory : VehicleFactory
+{
+    private readonly double _loadCapacity;
+    private readonly int _axles;
+
+    public TruckFactory(double loadCapacity, int axles)
+    {
+        _loadCapacity = loadCapacity;
+        _axles = axles;
+    }
+
+    public override IVehicle CreateVehicle()
+    {
+        return new Truck(_loadCapacity, _axles);
+    }
+}
+
+public class BusFactory : VehicleFactory
+{
+    private readonly int _capacity;
+    private readonly string _fuelType;
+
+    public BusFactory(int capacity, string fuelType)
+    {
+        _capacity = capacity;
+        _fuelType = fuelType;
+    }
+
+    public override IVehicle CreateVehicle()
+    {
+        return new Bus(_capacity, _fuelType);
+    }
+}
+
+public class Bus : IVehicle
+{
+    public int Capacity { get; }
+    public string FuelType { get; }
+
+    public Bus(int capacity, string fuelType)
+    {
+        Capacity = capacity;
+        FuelType = fuelType;
+    }
+
+    public void Drive()
+    {
+        Console.WriteLine($"Driving a bus with {Capacity} seats.");
+    }
+
+    public void Refuel()
+    {
+        Console.WriteLine($"Refueling a bus with {FuelType}.");
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        List<IVehicle> vehicles = new List<IVehicle>();
+
+        while (true)
+        {
+            Console.WriteLine("Выберите тип транспортного средства:");
+            Console.WriteLine("1. Автомобиль");
+            Console.WriteLine("2. Мотоцикл");
+            Console.WriteLine("3. Грузовик");
+            Console.WriteLine("4. Автобус");
+            Console.WriteLine("0. Выход");
+            string choice = Console.ReadLine();
+
+            if (choice == "0") break;
+
+            IVehicle vehicle = null;
+
+            switch (choice)
+            {
+                case "1":
+                    Console.WriteLine("Введите марку:");
+                    string make = Console.ReadLine();
+                    Console.WriteLine("Введите модель:");
+                    string model = Console.ReadLine();
+                    Console.WriteLine("Введите тип топлива:");
+                    string fuelType = Console.ReadLine();
+                    vehicle = new CarFactory(make, model, fuelType).CreateVehicle();
+                    break;
+
+                case "2":
+                    Console.WriteLine("Введите тип мотоцикла:");
+                    string type = Console.ReadLine();
+                    Console.WriteLine("Введите объем двигателя:");
+                    double engineCapacity = double.Parse(Console.ReadLine());
+                    vehicle = new MotorcycleFactory(type, engineCapacity).CreateVehicle();
+                    break;
+
+                case "3":
+                    Console.WriteLine("Введите грузоподъемность:");
+                    double loadCapacity = double.Parse(Console.ReadLine());
+                    Console.WriteLine("Введите количество осей:");
+                    int axles = int.Parse(Console.ReadLine());
+                    vehicle = new TruckFactory(loadCapacity, axles).CreateVehicle();
+                    break;
+
+                case "4":
+                    Console.WriteLine("Введите количество мест:");
+                    int capacity = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Введите тип топлива:");
+                    string busFuelType = Console.ReadLine();
+                    vehicle = new BusFactory(capacity, busFuelType).CreateVehicle();
+                    break;
+
+                default:
+                    Console.WriteLine("Неверный выбор. Попробуйте снова.");
+                    continue;
+            }
+
+            vehicles.Add(vehicle);
+            vehicle.Drive();
+            vehicle.Refuel();
+        }
+    }
+}
+
+
+//lab
+
+
+using System;
+using System.Collections.Generic;
+
+public interface ITransport
+{
+    void Move();
+    void FuelUp();
+}
+
+public class Car : ITransport
+{
+    public string Model { get; }
+    public int Speed { get; }
+
+    public Car(string model, int speed)
+    {
+        Model = model;
+        Speed = speed;
+    }
+
+    public void Move()
+    {
+        Console.WriteLine($"Car {Model} is moving at speed {Speed} km/h.");
+    }
+
+    public void FuelUp()
+    {
+        Console.WriteLine($"Refueling car {Model}.");
+    }
+}
+
+public class Motorcycle : ITransport
+{
+    public string Model { get; }
+    public int Speed { get; }
+
+    public Motorcycle(string model, int speed)
+    {
+        Model = model;
+        Speed = speed;
+    }
+
+    public void Move()
+    {
+        Console.WriteLine($"Motorcycle {Model} is moving at speed {Speed} km/h.");
+    }
+
+    public void FuelUp()
+    {
+        Console.WriteLine($"Refueling motorcycle {Model}.");
+    }
+}
+
+public class Plane : ITransport
+{
+    public string Model { get; }
+    public int Speed { get; }
+
+    public Plane(string model, int speed)
+    {
+        Model = model;
+        Speed = speed;
+    }
+
+    public void Move()
+    {
+        Console.WriteLine($"Plane {Model} is flying at speed {Speed} km/h.");
+    }
+
+    public void FuelUp()
+    {
+        Console.WriteLine($"Refueling plane {Model}.");
+    }
+}
+
+public class Bicycle : ITransport
+{
+    public string Model { get; }
+    public int Speed { get; }
+
+    public Bicycle(string model, int speed)
+    {
+        Model = model;
+        Speed = speed;
+    }
+
+    public void Move()
+    {
+        Console.WriteLine($"Bicycle {Model} is moving at speed {Speed} km/h.");
+    }
+
+    public void FuelUp()
+    {
+        Console.WriteLine($"Bicycle {Model} does not need fuel.");
+    }
+}
+
+public abstract class TransportFactory
+{
+    public abstract ITransport CreateTransport(string model, int speed);
+}
+
+public class CarFactory : TransportFactory
+{
+    public override ITransport CreateTransport(string model, int speed)
+    {
+        return new Car(model, speed);
+    }
+}
+
+public class MotorcycleFactory : TransportFactory
+{
+    public override ITransport CreateTransport(string model, int speed)
+    {
+        return new Motorcycle(model, speed);
+    }
+}
+
+public class PlaneFactory : TransportFactory
+{
+    public override ITransport CreateTransport(string model, int speed)
+    {
+        return new Plane(model, speed);
+    }
+}
+
+public class BicycleFactory : TransportFactory
+{
+    public override ITransport CreateTransport(string model, int speed)
+    {
+        return new Bicycle(model, speed);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        List<ITransport> transports = new List<ITransport>();
+
+        while (true)
+        {
+            Console.WriteLine("Choose a type of transport:");
+            Console.WriteLine("1. Car");
+            Console.WriteLine("2. Motorcycle");
+            Console.WriteLine("3. Plane");
+            Console.WriteLine("4. Bicycle");
+            Console.WriteLine("0. Exit");
+            string choice = Console.ReadLine();
+
+            if (choice == "0") break;
+
+            Console.WriteLine("Enter model:");
+            string model = Console.ReadLine();
+
+            Console.WriteLine("Enter speed (km/h):");
+            int speed = int.Parse(Console.ReadLine());
+
+            ITransport transport = null;
+
+            switch (choice)
+            {
+                case "1":
+                    transport = new CarFactory().CreateTransport(model, speed);
+                    break;
+
+                case "2":
+                    transport = new MotorcycleFactory().CreateTransport(model, speed);
+                    break;
+
+                case "3":
+                    transport = new PlaneFactory().CreateTransport(model, speed);
+                    break;
+
+                case "4":
+                    transport = new BicycleFactory().CreateTransport(model, speed);
+                    break;
+
+                default:
+                    Console.WriteLine("Invalid choice. Try again.");
+                    continue;
+            }
+
+            transports.Add(transport);
+            transport.Move();
+            transport.FuelUp();
+        }
+    }
+}
+
+
+//practice 
+
+
+using System;
+
+public interface IDocument
+{
+    void Open();
+}
+
+public class Report : IDocument
+{
+    public void Open()
+    {
+        Console.WriteLine("Opening report document.");
+    }
+}
+
+public class Resume : IDocument
+{
+    public void Open()
+    {
+        Console.WriteLine("Opening resume document.");
+    }
+}
+
+public class Letter : IDocument
+{
+    public void Open()
+    {
+        Console.WriteLine("Opening letter document.");
+    }
+}
+
+public class Invoice : IDocument
+{
+    public void Open()
+    {
+        Console.WriteLine("Opening invoice document.");
+    }
+}
+
+public abstract class DocumentCreator
+{
+    public abstract IDocument CreateDocument();
+}
+
+public class ReportCreator : DocumentCreator
+{
+    public override IDocument CreateDocument()
+    {
+        return new Report();
+    }
+}
+
+public class ResumeCreator : DocumentCreator
+{
+    public override IDocument CreateDocument()
+    {
+        return new Resume();
+    }
+}
+
+public class LetterCreator : DocumentCreator
+{
+    public override IDocument CreateDocument()
+    {
+        return new Letter();
+    }
+}
+
+public class InvoiceCreator : DocumentCreator
+{
+    public override IDocument CreateDocument()
+    {
+        return new Invoice();
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        while (true)
+        {
+            Console.WriteLine("Select document type to create:");
+            Console.WriteLine("1. Report");
+            Console.WriteLine("2. Resume");
+            Console.WriteLine("3. Letter");
+            Console.WriteLine("4. Invoice");
+            Console.WriteLine("0. Exit");
+            string choice = Console.ReadLine();
+
+            if (choice == "0") break;
+
+            IDocument document = null;
+            DocumentCreator creator = null;
+
+            switch (choice)
+            {
+                case "1":
+                    creator = new ReportCreator();
+                    break;
+
+                case "2":
+                    creator = new ResumeCreator();
+                    break;
+
+                case "3":
+                    creator = new LetterCreator();
+                    break;
+
+                case "4":
+                    creator = new InvoiceCreator();
+                    break;
+
+                default:
+                    Console.WriteLine("Invalid choice. Try again.");
+                    continue;
+            }
+
+            document = creator.CreateDocument();
+            document.Open();
+        }
+    }
+}

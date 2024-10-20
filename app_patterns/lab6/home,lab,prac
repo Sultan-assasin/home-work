@@ -1,0 +1,518 @@
+//singletone 
+
+
+
+public class ConfigurationManager
+{
+    private static ConfigurationManager _instance;
+    private static readonly object _lock = new object();
+    private Dictionary<string, string> _settings;
+
+    private ConfigurationManager()
+    {
+        _settings = new Dictionary<string, string>();
+    }
+
+    public static ConfigurationManager GetInstance()
+    {
+        if (_instance == null)
+        {
+            lock (_lock)
+            {
+                if (_instance == null)
+                {
+                    _instance = new ConfigurationManager();
+                }
+            }
+        }
+        return _instance;
+    }
+
+    public void LoadSettings(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            foreach (var line in File.ReadAllLines(filePath))
+            {
+                var parts = line.Split('=');
+                if (parts.Length == 2)
+                {
+                    _settings[parts[0].Trim()] = parts[1].Trim();
+                }
+            }
+        }
+    }
+
+    public string GetSetting(string key)
+    {
+        return _settings.ContainsKey(key) ? _settings[key] : null;
+    }
+
+    public void SetSetting(string key, string value)
+    {
+        _settings[key] = value;
+    }
+}
+
+
+//builder 
+
+using System;
+
+public interface IReportBuilder
+{
+    void SetHeader(string header);
+    void SetContent(string content);
+    void SetFooter(string footer);
+    Report GetReport();
+}
+
+public class TextReportBuilder : IReportBuilder
+{
+    private Report _report = new Report();
+
+    public void SetHeader(string header) => _report.Header = header;
+    public void SetContent(string content) => _report.Content = content;
+    public void SetFooter(string footer) => _report.Footer = footer;
+    public Report GetReport() => _report;
+}
+
+public class HtmlReportBuilder : IReportBuilder
+{
+    private Report _report = new Report();
+
+    public void SetHeader(string header) => _report.Header = $"<h1>{header}</h1>";
+    public void SetContent(string content) => _report.Content = $"<p>{content}</p>";
+    public void SetFooter(string footer) => _report.Footer = $"<footer>{footer}</footer>";
+    public Report GetReport() => _report;
+}
+
+public class ReportDirector
+{
+    public void ConstructReport(IReportBuilder builder, string header, string content, string footer)
+    {
+        builder.SetHeader(header);
+        builder.SetContent(content);
+        builder.SetFooter(footer);
+    }
+}
+
+public class Report
+{
+    public string Header { get; set; }
+    public string Content { get; set; }
+    public string Footer { get; set; }
+
+    public void Display()
+    {
+        Console.WriteLine(Header);
+        Console.WriteLine(Content);
+        Console.WriteLine(Footer);
+    }
+}
+
+//prototype 
+
+using System;
+using System.Collections.Generic;
+
+public class Product : ICloneable
+{
+    public string Name { get; set; }
+    public double Price { get; set; }
+    
+    public object Clone()
+    {
+        return MemberwiseClone();
+    }
+}
+
+public class Order : ICloneable
+{
+    public List<Product> Products { get; set; } = new List<Product>();
+    public double DeliveryCost { get; set; }
+    public double Discount { get; set; }
+    public string PaymentMethod { get; set; }
+
+    public object Clone()
+    {
+        Order clonedOrder = (Order)MemberwiseClone();
+        clonedOrder.Products = new List<Product>();
+        foreach (var product in Products)
+        {
+            clonedOrder.Products.Add((Product)product.Clone());
+        }
+        return clonedOrder;
+    }
+}
+
+
+
+//lab
+
+using System;
+using System.IO;
+using System.Threading;
+
+public enum LogLevel
+{
+    INFO,
+    WARNING,
+    ERROR
+}
+
+public class Logger
+{
+    private static Logger _instance;
+    private static readonly object _lock = new object();
+    private LogLevel _logLevel = LogLevel.INFO;
+    private string _logFilePath = "log.txt";
+
+    // Приватный конструктор
+    private Logger() { }
+
+    public static Logger GetInstance()
+    {
+        // Потокобезопасная инициализация
+        if (_instance == null)
+        {
+            lock (_lock)
+            {
+                if (_instance == null)
+                {
+                    _instance = new Logger();
+                }
+            }
+        }
+        return _instance;
+    }
+
+    public void SetLogLevel(LogLevel level)
+    {
+        _logLevel = level;
+    }
+
+    public void SetLogFilePath(string path)
+    {
+        _logFilePath = path;
+    }
+
+    public void Log(string message, LogLevel level)
+    {
+        if (level >= _logLevel)
+        {
+            string logMessage = $"{DateTime.Now}: [{level}] {message}";
+            File.AppendAllText(_logFilePath, logMessage + Environment.NewLine);
+        }
+    }
+}
+
+
+
+public class Computer
+{
+    public string CPU { get; set; }
+    public string RAM { get; set; }
+    public string Storage { get; set; }
+    public string GPU { get; set; }
+    public string OS { get; set; }
+
+    public override string ToString()
+    {
+        return $"Компьютер: CPU - {CPU}, RAM - {RAM}, Накопитель - {Storage}, GPU - {GPU}, ОС - {OS}";
+    }
+}
+
+public interface IComputerBuilder
+{
+    void SetCPU();
+    void SetRAM();
+    void SetStorage();
+    void SetGPU();
+    void SetOS();
+    Computer GetComputer();
+}
+
+
+public class ComputerDirector
+{
+    private IComputerBuilder _builder;
+
+    public ComputerDirector(IComputerBuilder builder)
+    {
+        _builder = builder;
+    }
+
+    public void ConstructComputer()
+    {
+        _builder.SetCPU();
+        _builder.SetRAM();
+        _builder.SetStorage();
+        _builder.SetGPU();
+        _builder.SetOS();
+    }
+
+    public Computer GetComputer()
+    {
+        return _builder.GetComputer();
+    }
+}
+public interface IPrototype
+{
+    IPrototype Clone();
+}
+
+public class Document : IPrototype
+{
+    public string Title { get; set; }
+    public string Content { get; set; }
+    public List<Section> Sections { get; set; } = new List<Section>();
+    public List<Image> Images { get; set; } = new List<Image>();
+
+    public IPrototype Clone()
+    {
+        Document clone = (Document)this.MemberwiseClone();
+        clone.Sections = new List<Section>(Sections.Select(s => (Section)s.Clone()));
+        clone.Images = new List<Image>(Images.Select(i => (Image)i.Clone()));
+        return clone;
+    }
+}
+
+public class Section : IPrototype
+{
+    public string Header { get; set; }
+    public string Text { get; set; }
+
+    public IPrototype Clone()
+    {
+        return (IPrototype)this.MemberwiseClone();
+    }
+}
+
+public class Image : IPrototype
+{
+    public string URL { get; set; }
+
+    public IPrototype Clone()
+    {
+        return (IPrototype)this.MemberwiseClone();
+    }
+}
+
+
+public class DocumentManager
+{
+    public Document CreateDocument(IPrototype prototype)
+    {
+        return (Document)prototype.Clone();
+    }
+}
+
+
+
+//practice 
+
+
+using System;
+using System.IO;
+using System.Threading;
+
+public enum LogLevel
+{
+    INFO,
+    WARNING,
+    ERROR
+}
+
+public class Logger
+{
+    private static Logger _instance;
+    private static readonly object _lock = new object();
+    private LogLevel _logLevel;
+    private string _logFilePath;
+
+    private Logger()
+    {
+        _logLevel = LogLevel.INFO; 
+        _logFilePath = "logs.txt"; 
+    }
+
+    public static Logger GetInstance()
+    {
+        if (_instance == null)
+        {
+            lock (_lock)
+            {
+                if (_instance == null)
+                {
+                    _instance = new Logger();
+                }
+            }
+        }
+        return _instance;
+    }
+
+    public void SetLogLevel(LogLevel level)
+    {
+        _logLevel = level;
+    }
+
+    public void Log(string message, LogLevel level)
+    {
+        if (level >= _logLevel)
+        {
+            lock (_lock)
+            {
+                File.AppendAllText(_logFilePath, $"{DateTime.Now}: [{level}] {message}\n");
+            }
+        }
+    }
+
+    public void SetLogFilePath(string path)
+    {
+        _logFilePath = path;
+    }
+}
+
+
+using System;
+using System.IO;
+
+public class LogReader
+{
+    private string _logFilePath;
+
+    public LogReader(string logFilePath)
+    {
+        _logFilePath = logFilePath;
+    }
+
+    public void DisplayLogs(LogLevel filterLevel)
+    {
+        foreach (var line in File.ReadLines(_logFilePath))
+        {
+            if (line.Contains($"[{filterLevel}]"))
+            {
+                Console.WriteLine(line);
+            }
+        }
+    }
+}
+
+
+public interface IReportBuilder
+{
+    void SetHeader(string header);
+    void SetContent(string content);
+    void SetFooter(string footer);
+    void AddSection(string sectionName, string sectionContent);
+    void SetStyle(ReportStyle style);
+    Report GetReport();
+}
+
+using System.Collections.Generic;
+
+public class Report
+{
+    public string Header { get; set; }
+    public string Content { get; set; }
+    public string Footer { get; set; }
+    public List<(string SectionName, string SectionContent)> Sections { get; } = new List<(string, string)>();
+    public ReportStyle Style { get; set; }
+
+    public void Export()
+    {
+    }
+}
+
+public class TextReportBuilder : IReportBuilder
+{
+    private Report _report = new Report();
+
+    public void SetHeader(string header) => _report.Header = header;
+    public void SetContent(string content) => _report.Content = content;
+    public void SetFooter(string footer) => _report.Footer = footer;
+    public void AddSection(string sectionName, string sectionContent) => _report.Sections.Add((sectionName, sectionContent));
+    public void SetStyle(ReportStyle style) => _report.Style = style;
+    public Report GetReport() => _report;
+}
+
+public class ReportStyle
+{
+    public string BackgroundColor { get; set; }
+    public string FontColor { get; set; }
+    public int FontSize { get; set; }
+}
+public class ReportDirector
+{
+    public void ConstructReport(IReportBuilder builder, ReportStyle style)
+    {
+        builder.SetStyle(style);
+        builder.SetHeader("Отчет по проекту");
+        builder.SetContent("Основной контент отчета.");
+        builder.SetFooter("Конец отчета");
+        builder.AddSection("Раздел 1", "Содержимое раздела 1");
+        // Добавление других секций и контента
+    }
+}
+public interface ICloneable
+{
+    ICloneable Clone();
+}
+
+
+using System.Collections.Generic;
+
+public class Character : ICloneable
+{
+    public int Health { get; set; }
+    public int Strength { get; set; }
+    public int Agility { get; set; }
+    public int Intelligence { get; set; }
+    public Weapon Weapon { get; set; }
+    public Armor Armor { get; set; }
+    public List<Skill> Skills { get; set; }
+
+    public Character()
+    {
+        Skills = new List<Skill>();
+    }
+
+    public ICloneable Clone()
+    {
+        var clone = (Character)this.MemberwiseClone();
+        clone.Weapon = (Weapon)this.Weapon.Clone();
+        clone.Armor = (Armor)this.Armor.Clone();
+        clone.Skills = new List<Skill>(this.Skills.ConvertAll(skill => (Skill)skill.Clone()));
+        return clone;
+    }
+}
+public class Weapon : ICloneable
+{
+    public int Damage { get; set; }
+
+    public ICloneable Clone()
+    {
+        return (Weapon)this.MemberwiseClone();
+    }
+}
+
+public class Armor : ICloneable
+{
+    public int Defense { get; set; }
+
+    public ICloneable Clone()
+    {
+        return (Armor)this.MemberwiseClone();
+    }
+}
+
+public class Skill : ICloneable
+{
+    public string Name { get; set; }
+
+    public ICloneable Clone()
+    {
+        return (Skill)this.MemberwiseClone();
+    }
+}
