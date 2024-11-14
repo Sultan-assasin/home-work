@@ -1,0 +1,354 @@
+//практическая 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+#include <algorithm>
+
+
+class IReport {
+public:
+    virtual std::string Generate() const = 0;
+    virtual ~IReport() = default;
+};
+
+
+class SalesReport : public IReport {
+public:
+    std::string Generate() const override {
+        return "Sales Report Data";
+    }
+};
+
+class UserReport : public IReport {
+public:
+    std::string Generate() const override {
+        return "User Report Data";
+    }
+};
+
+
+class ReportDecorator : public IReport {
+protected:
+    std::shared_ptr<IReport> report;
+public:
+    ReportDecorator(std::shared_ptr<IReport> r) : report(r) {}
+    std::string Generate() const override {
+        return report->Generate();
+    }
+};
+
+
+class DateFilterDecorator : public ReportDecorator {
+    std::string startDate, endDate;
+public:
+    DateFilterDecorator(std::shared_ptr<IReport> r, std::string start, std::string end) 
+        : ReportDecorator(r), startDate(start), endDate(end) {}
+    std::string Generate() const override {
+        return report->Generate() + " | Filtered by Date: " + startDate + " - " + endDate;
+    }
+};
+
+class SortingDecorator : public ReportDecorator {
+    std::string criteria;
+public:
+    SortingDecorator(std::shared_ptr<IReport> r, std::string crit) 
+        : ReportDecorator(r), criteria(crit) {}
+    std::string Generate() const override {
+        return report->Generate() + " | Sorted by: " + criteria;
+    }
+};
+
+class CsvExportDecorator : public ReportDecorator {
+public:
+    CsvExportDecorator(std::shared_ptr<IReport> r) : ReportDecorator(r) {}
+    std::string Generate() const override {
+        return report->Generate() + " | Exported as CSV";
+    }
+};
+
+class PdfExportDecorator : public ReportDecorator {
+public:
+    PdfExportDecorator(std::shared_ptr<IReport> r) : ReportDecorator(r) {}
+    std::string Generate() const override {
+        return report->Generate() + " | Exported as PDF";
+    }
+};
+
+class IInternalDeliveryService {
+public:
+    virtual void DeliverOrder(const std::string& orderId) = 0;
+    virtual std::string GetDeliveryStatus(const std::string& orderId) = 0;
+    virtual ~IInternalDeliveryService() = default;
+};
+
+class InternalDeliveryService : public IInternalDeliveryService {
+public:
+    void DeliverOrder(const std::string& orderId) override {
+        std::cout << "Order " << orderId << " delivered by Internal Service\n";
+    }
+    std::string GetDeliveryStatus(const std::string& orderId) override {
+        return "Delivered by Internal Service";
+    }
+};
+
+class ExternalLogisticsServiceA {
+public:
+    void ShipItem(int itemId) {
+        std::cout << "Item " << itemId << " shipped by External Service A\n";
+    }
+    std::string TrackShipment(int shipmentId) {
+        return "Tracking External Service A";
+    }
+};
+
+class ExternalLogisticsServiceB {
+public:
+    void SendPackage(const std::string& packageInfo) {
+        std::cout << "Package " << packageInfo << " sent by External Service B\n";
+    }
+    std::string CheckPackageStatus(const std::string& trackingCode) {
+        return "Status from External Service B";
+    }
+};
+
+class LogisticsAdapterA : public IInternalDeliveryService {
+    ExternalLogisticsServiceA serviceA;
+public:
+    void DeliverOrder(const std::string& orderId) override {
+        serviceA.ShipItem(std::stoi(orderId));
+    }
+    std::string GetDeliveryStatus(const std::string& orderId) override {
+        return serviceA.TrackShipment(std::stoi(orderId));
+    }
+};
+
+class LogisticsAdapterB : public IInternalDeliveryService {
+    ExternalLogisticsServiceB serviceB;
+public:
+    void DeliverOrder(const std::string& orderId) override {
+        serviceB.SendPackage(orderId);
+    }
+    std::string GetDeliveryStatus(const std::string& orderId) override {
+        return serviceB.CheckPackageStatus(orderId);
+    }
+};
+
+class DeliveryServiceFactory {
+public:
+    static std::shared_ptr<IInternalDeliveryService> GetService(const std::string& type) {
+        if (type == "Internal") {
+            return std::make_shared<InternalDeliveryService>();
+        } else if (type == "ExternalA") {
+            return std::make_shared<LogisticsAdapterA>();
+        } else if (type == "ExternalB") {
+            return std::make_shared<LogisticsAdapterB>();
+        }
+        return nullptr;
+    }
+};
+
+
+// лабараторная 
+
+using System;
+
+public interface IBeverage
+{
+    double GetCost();
+    string GetDescription();
+}
+
+public class Coffee : IBeverage
+{
+    public double GetCost() => 50.0;
+    public string GetDescription() => "Coffee";
+}
+
+public abstract class BeverageDecorator : IBeverage
+{
+    protected IBeverage _beverage;
+    public BeverageDecorator(IBeverage beverage) { _beverage = beverage; }
+    public virtual double GetCost() => _beverage.GetCost();
+    public virtual string GetDescription() => _beverage.GetDescription();
+}
+
+public class MilkDecorator : BeverageDecorator
+{
+    public MilkDecorator(IBeverage beverage) : base(beverage) { }
+    public override double GetCost() => base.GetCost() + 10.0;
+    public override string GetDescription() => base.GetDescription() + ", Milk";
+}
+
+public class SugarDecorator : BeverageDecorator
+{
+    public SugarDecorator(IBeverage beverage) : base(beverage) { }
+    public override double GetCost() => base.GetCost() + 5.0;
+    public override string GetDescription() => base.GetDescription() + ", Sugar";
+}
+
+public class ChocolateDecorator : BeverageDecorator
+{
+    public ChocolateDecorator(IBeverage beverage) : base(beverage) { }
+    public override double GetCost() => base.GetCost() + 15.0;
+    public override string GetDescription() => base.GetDescription() + ", Chocolate";
+}
+
+public class VanillaDecorator : BeverageDecorator
+{
+    public VanillaDecorator(IBeverage beverage) : base(beverage) { }
+    public override double GetCost() => base.GetCost() + 8.0;
+    public override string GetDescription() => base.GetDescription() + ", Vanilla";
+}
+
+public class CinnamonDecorator : BeverageDecorator
+{
+    public CinnamonDecorator(IBeverage beverage) : base(beverage) { }
+    public override double GetCost() => base.GetCost() + 7.0;
+    public override string GetDescription() => base.GetDescription() + ", Cinnamon";
+}
+
+class Program
+{
+    static void Main()
+    {
+        IBeverage beverage = new Coffee();
+        Console.WriteLine($"{beverage.GetDescription()} : {beverage.GetCost()}");
+
+        beverage = new MilkDecorator(beverage);
+        Console.WriteLine($"{beverage.GetDescription()} : {beverage.GetCost()}");
+
+        beverage = new SugarDecorator(beverage);
+        Console.WriteLine($"{beverage.GetDescription()} : {beverage.GetCost()}");
+
+        beverage = new ChocolateDecorator(beverage);
+        Console.WriteLine($"{beverage.GetDescription()} : {beverage.GetCost()}");
+
+        beverage = new VanillaDecorator(beverage);
+        Console.WriteLine($"{beverage.GetDescription()} : {beverage.GetCost()}");
+
+        beverage = new CinnamonDecorator(beverage);
+        Console.WriteLine($"{beverage.GetDescription()} : {beverage.GetCost()}");
+    }
+// домашняя 
+
+using System;
+
+public interface IBeverage
+{
+    double Cost();
+    string Description();
+}
+
+public class Espresso : IBeverage
+{
+    public double Cost() => 80.0;
+    public string Description() => "Espresso";
+}
+
+public class Tea : IBeverage
+{
+    public double Cost() => 60.0;
+    public string Description() => "Tea";
+}
+
+public class Latte : IBeverage
+{
+    public double Cost() => 100.0;
+    public string Description() => "Latte";
+}
+
+public abstract class BeverageDecorator : IBeverage
+{
+    protected IBeverage _beverage;
+    public BeverageDecorator(IBeverage beverage) { _beverage = beverage; }
+    public virtual double Cost() => _beverage.Cost();
+    public virtual string Description() => _beverage.Description();
+}
+
+public class Milk : BeverageDecorator
+{
+    public Milk(IBeverage beverage) : base(beverage) { }
+    public override double Cost() => base.Cost() + 15.0;
+    public override string Description() => base.Description() + ", Milk";
+}
+
+public class Sugar : BeverageDecorator
+{
+    public Sugar(IBeverage beverage) : base(beverage) { }
+    public override double Cost() => base.Cost() + 5.0;
+    public override string Description() => base.Description() + ", Sugar";
+}
+
+public class WhippedCream : BeverageDecorator
+{
+    public WhippedCream(IBeverage beverage) : base(beverage) { }
+    public override double Cost() => base.Cost() + 20.0;
+    public override string Description() => base.Description() + ", Whipped Cream";
+}
+
+public interface IPaymentProcessor
+{
+    void ProcessPayment(double amount);
+}
+
+public class PayPalPaymentProcessor : IPaymentProcessor
+{
+    public void ProcessPayment(double amount)
+    {
+        Console.WriteLine($"Processing {amount} through PayPal.");
+    }
+}
+
+public class StripePaymentService
+{
+    public void MakeTransaction(double totalAmount)
+    {
+        Console.WriteLine($"Processing {totalAmount} through Stripe.");
+    }
+}
+
+public class StripePaymentAdapter : IPaymentProcessor
+{
+    private StripePaymentService _stripeService;
+    public StripePaymentAdapter(StripePaymentService stripeService) { _stripeService = stripeService; }
+    public void ProcessPayment(double amount) => _stripeService.MakeTransaction(amount);
+}
+
+public class OtherPaymentService
+{
+    public void ExecutePayment(double amount)
+    {
+        Console.WriteLine($"Processing {amount} through Other Payment Service.");
+    }
+}
+
+public class OtherPaymentAdapter : IPaymentProcessor
+{
+    private OtherPaymentService _otherService;
+    public OtherPaymentAdapter(OtherPaymentService otherService) { _otherService = otherService; }
+    public void ProcessPayment(double amount) => _otherService.ExecutePayment(amount);
+}
+
+class Program
+{
+    static void Main()
+    {
+        IBeverage beverage = new Latte();
+        beverage = new Milk(beverage);
+        beverage = new Sugar(beverage);
+        beverage = new WhippedCream(beverage);
+        Console.WriteLine($"{beverage.Description()} : {beverage.Cost()}");
+
+        IPaymentProcessor paypalProcessor = new PayPalPaymentProcessor();
+        paypalProcessor.ProcessPayment(100.0);
+
+        StripePaymentService stripeService = new StripePaymentService();
+        IPaymentProcessor stripeAdapter = new StripePaymentAdapter(stripeService);
+        stripeAdapter.ProcessPayment(150.0);
+
+        OtherPaymentService otherService = new OtherPaymentService();
+        IPaymentProcessor otherAdapter = new OtherPaymentAdapter(otherService);
+        otherAdapter.ProcessPayment(200.0);
+    }
+}
