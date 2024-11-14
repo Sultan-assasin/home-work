@@ -1,0 +1,256 @@
+//practice 
+
+using System;
+using System.Collections.Generic;
+
+public class Author
+{
+    public string Name { get; set; }
+    public string Bio { get; set; }
+    public Author(string name, string bio) { Name = name; Bio = bio; }
+}
+
+public class Book
+{
+    public string Title { get; set; }
+    public string ISBN { get; set; }
+    public Author Author { get; set; }
+    public int PublicationYear { get; set; }
+    public bool IsAvailable { get; private set; } = true;
+
+    public Book(string title, string isbn, Author author, int publicationYear)
+    {
+        Title = title;
+        ISBN = isbn;
+        Author = author;
+        PublicationYear = publicationYear;
+    }
+
+    public void ChangeAvailabilityStatus() => IsAvailable = !IsAvailable;
+    public string GetBookInfo() => $"{Title} by {Author.Name}, {PublicationYear}. ISBN: {ISBN}";
+}
+
+public abstract class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public abstract void Register();
+    public abstract void Login();
+}
+
+public class Reader : User
+{
+    public List<Loan> Loans { get; private set; } = new List<Loan>();
+    public override void Register() => Console.WriteLine($"{Name} registered as a Reader.");
+    public override void Login() => Console.WriteLine($"{Name} logged in as a Reader.");
+
+    public void BorrowBook(Book book, DateTime loanDate)
+    {
+        if (!book.IsAvailable) throw new Exception("Book is currently unavailable.");
+        book.ChangeAvailabilityStatus();
+        Loans.Add(new Loan(book, this, loanDate));
+    }
+}
+
+public class Librarian : User
+{
+    public override void Register() => Console.WriteLine($"{Name} registered as a Librarian.");
+    public override void Login() => Console.WriteLine($"{Name} logged in as a Librarian.");
+
+    public void AddBook(Library library, Book book) => library.Books.Add(book);
+}
+
+public class Loan
+{
+    public Book Book { get; }
+    public Reader Reader { get; }
+    public DateTime LoanDate { get; }
+    public DateTime? ReturnDate { get; private set; }
+
+    public Loan(Book book, Reader reader, DateTime loanDate)
+    {
+        Book = book;
+        Reader = reader;
+        LoanDate = loanDate;
+    }
+
+    public void ReturnBook()
+    {
+        Book.ChangeAvailabilityStatus();
+        ReturnDate = DateTime.Now;
+    }
+}
+
+public class Report
+{
+    public void GenerateReport(List<Loan> loans)
+    {
+        Console.WriteLine("Library Loan Report:");
+        foreach (var loan in loans) Console.WriteLine($"{loan.Book.Title} borrowed by {loan.Reader.Name} on {loan.LoanDate}");
+    }
+}
+
+public class Library
+{
+    public List<Book> Books { get; } = new List<Book>();
+    public List<User> Users { get; } = new List<User>();
+    public List<Loan> Loans { get; } = new List<Loan>();
+
+    public void RegisterUser(User user) => Users.Add(user);
+}
+// лаб
+using System;
+using System.Collections.Generic;
+
+public class Book
+{
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public string ISBN { get; set; }
+    public bool IsAvailable { get; private set; } = true;
+
+    public Book(string title, string author, string isbn)
+    {
+        Title = title;
+        Author = author;
+        ISBN = isbn;
+    }
+
+    public void MarkAsLoaned() => IsAvailable = false;
+    public void MarkAsAvailable() => IsAvailable = true;
+}
+
+public class Reader
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public List<Loan> Loans { get; private set; } = new List<Loan>();
+
+    public Reader(int id, string name, string email)
+    {
+        Id = id;
+        Name = name;
+        Email = email;
+    }
+
+    public void BorrowBook(Book book, DateTime loanDate)
+    {
+        if (!book.IsAvailable) throw new Exception("Book is currently unavailable.");
+        book.MarkAsLoaned();
+        Loans.Add(new Loan(book, this, loanDate));
+    }
+
+    public void ReturnBook(Loan loan)
+    {
+        loan.CompleteLoan();
+        loan.Book.MarkAsAvailable();
+    }
+}
+
+public class Librarian
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Position { get; set; }
+    public List<Book> Books { get; private set; } = new List<Book>();
+
+    public Librarian(int id, string name, string position)
+    {
+        Id = id;
+        Name = name;
+        Position = position;
+    }
+
+    public void AddBook(Book book) => Books.Add(book);
+    public void RemoveBook(Book book) => Books.Remove(book);
+}
+
+public class Loan
+{
+    public Book Book { get; }
+    public Reader Reader { get; }
+    public DateTime LoanDate { get; }
+    public DateTime? ReturnDate { get; private set; }
+
+    public Loan(Book book, Reader reader, DateTime loanDate)
+    {
+        Book = book;
+        Reader = reader;
+        LoanDate = loanDate;
+    }
+
+    public void CompleteLoan() => ReturnDate = DateTime.Now;
+}
+// домашнее 
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class Book
+{
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public string ISBN { get; set; }
+    public bool IsAvailable { get; private set; } = true;
+
+    public Book(string title, string author, string isbn)
+    {
+        Title = title;
+        Author = author;
+        ISBN = isbn;
+    }
+
+    public void MarkAsLoaned() => IsAvailable = false;
+    public void MarkAsAvailable() => IsAvailable = true;
+}
+
+public class Reader
+{
+    public string Name { get; set; }
+    public List<Book> BorrowedBooks { get; private set; } = new List<Book>();
+    private const int MaxBorrowLimit = 3;
+
+    public Reader(string name)
+    {
+        Name = name;
+    }
+
+    public void BorrowBook(Book book)
+    {
+        if (BorrowedBooks.Count >= MaxBorrowLimit) throw new Exception("Borrow limit reached.");
+        if (!book.IsAvailable) throw new Exception("Book is not available.");
+        book.MarkAsLoaned();
+        BorrowedBooks.Add(book);
+    }
+
+    public void ReturnBook(Book book)
+    {
+        if (BorrowedBooks.Remove(book)) book.MarkAsAvailable();
+        else throw new Exception("Book not found in borrowed list.");
+    }
+}
+
+public class Librarian
+{
+    public string Name { get; set; }
+
+    public Librarian(string name)
+    {
+        Name = name;
+    }
+
+    public void AddBook(Library library, Book book) => library.Books.Add(book);
+    public void RemoveBook(Library library, Book book) => library.Books.Remove(book);
+}
+
+public class Library
+{
+    public List<Book> Books { get; private set; } = new List<Book>();
+
+    public IEnumerable<Book> GetAvailableBooks() => Books.Where(b => b.IsAvailable);
+    public IEnumerable<Book> SearchBooks(string query) =>
+        Books.Where(b => b.Title.Contains(query, StringComparison.OrdinalIgnoreCase) || b.Author.Contains(query, StringComparison.OrdinalIgnoreCase));
+}
